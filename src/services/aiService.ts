@@ -1,3 +1,5 @@
+import type { ChatMessage } from '@/data/simulation'
+
 interface GeminiResponse {
   candidates: {
     content: {
@@ -52,4 +54,36 @@ export const getInsight = async (prompt: string) => {
   const response = await callGeminiAPI(prompt)
   const json = response.candidates[0].content.parts[0].text
   return JSON.parse(json) as InsightData
+}
+
+export const askEducator = async (
+  simulationContext: string,
+  history: ChatMessage[],
+  question: string,
+): Promise<string> => {
+  const historyText = history
+    .map((msg) =>
+      msg.role === 'user'
+        ? `Usuário: ${msg.content}`
+        : `Educador Financeiro: ${msg.content}`,
+    )
+    .join('\n')
+
+  const prompt = `Você é um educador financeiro especializado em finanças pessoais, com linguagem clara, didática e encorajadora, voltado para pessoas sem conhecimento financeiro. Fale sempre em segunda pessoa ("você", "sua", "seu").
+
+Contexto da simulação financeira do usuário:
+${simulationContext}
+
+${historyText ? `Histórico da conversa:\n${historyText}\n` : ''}Usuário: ${question}
+
+Responda de forma clara, prática e motivadora. Seja específico com base nos dados da simulação. Não use markdown. Responda apenas como "Educador Financeiro" sem incluir o prefixo na resposta. Máximo de 4 parágrafos.`
+
+  const response = await callGeminiAPI(prompt)
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+
+  if (!text.trim()) {
+    throw new Error('A IA retornou uma resposta vazia.')
+  }
+
+  return text.trim()
 }

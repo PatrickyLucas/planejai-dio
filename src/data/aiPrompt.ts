@@ -64,3 +64,19 @@ export function buildAIPrompt(simulation: SimulationRecord) {
       - "needs_adjustment": saldo negativo de até 20% do valor da economia mensal necessária
       - "unfeasible": saldo negativo superior a 20% do valor da economia mensal necessária`
 }
+
+export function buildSimulationContext(simulation: SimulationRecord): string {
+  const monthlySavings = calcMonthlySavings(simulation)
+  const monthlySavingsNeeded =
+    parseCurrency(simulation.goalAmount) / parseInt(simulation.goalDeadline)
+
+  return `- Renda mensal bruta: ${simulation.income}
+- Custos fixos essenciais: ${simulation.expenses}
+- Dívidas e parcelas mensais: ${simulation.debts}
+- Valor disponível por mês: R$ ${monthlySavings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Meta: ${simulation.goalName}
+- Custo da meta: ${simulation.goalAmount}
+- Prazo desejado: ${simulation.goalDeadline} meses
+- Economia mensal necessária para atingir a meta no prazo: R$ ${monthlySavingsNeeded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Saldo após reserva para a meta: R$ ${(monthlySavings - monthlySavingsNeeded).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
